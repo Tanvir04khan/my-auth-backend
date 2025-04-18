@@ -12,20 +12,23 @@ import pool from "../../database";
 import { getLoginDetails } from "../../queries";
 import bcrypt from "bcrypt";
 import { ResponseModel } from "../../models/responseModel";
-import { UserType } from "../../types";
+import { QueryReturnType, UserType } from "../../types";
 
 export const login = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const { email, password } = req.body;
+  const { email, phoneNumber, password } = req.body;
   try {
-    if (!email || !password) {
+    if ((!email && !phoneNumber) || !password) {
       throw new ErrorModel(StatusCode.BAD_REQUEST, ErrorMessages.LOGIN_DETAILS);
     }
 
-    const { rows: user } = await pool.query(getLoginDetails, [email]);
+    const { rows: user } = await pool.query<QueryReturnType>(getLoginDetails, [
+      email,
+      phoneNumber,
+    ]);
     if (!user.length) {
       throw new ErrorModel(
         StatusCode.UNAUTHORIZED,
@@ -47,8 +50,7 @@ export const login = async (
 
     const { refreshToken, jwtToken } = await generateRefreshTokenJwtToken({
       userId: user[0].userId,
-      firstName: user[0].firststName,
-      lastName: user[0].lastName,
+      phoneNumber: user[0].phoneNumber,
     });
 
     const { password: userpassword, ...userWithoutPassword } = user[0];
@@ -62,7 +64,7 @@ export const login = async (
         StatusCode.OK,
         SuccessMessage.LOGIN,
         {
-          ...(userWithoutPassword as UserType),
+          ...userWithoutPassword,
           accessToken: jwtToken,
           refreshToken,
         }

@@ -67,8 +67,7 @@ export const authorizedUserLookup = async (
     const { jwtToken, refreshToken: newRefreshToken } =
       await generateRefreshTokenJwtToken({
         userId: user[0].userId,
-        firstName: user[0].firstName,
-        lastName: user[0].lastName,
+        phoneNumber: user[0].phoneNumber,
       });
 
     console.log("output", newRefreshToken);

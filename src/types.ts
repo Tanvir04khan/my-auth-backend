@@ -17,3 +17,13 @@ export type GetUserResponse = {
   refreshToken: string;
   refreshTokenExpiry: string;
 };
+
+export type QueryReturnType = {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  password: string;
+  refreshToken: string;
+};

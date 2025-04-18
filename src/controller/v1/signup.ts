@@ -13,22 +13,19 @@ import { checkPhoneAndEmail, insertUser } from "../../queries";
 import { ErrorModel } from "../../models/errorModel";
 import bcrypt from "bcrypt";
 import { ResponseModel } from "../../models/responseModel";
-import { UserType } from "../../types";
+import { GetUserResponse, QueryReturnType, UserType } from "../../types";
 
 const signup = async (req: Request, res: Response, next: NextFunction) => {
   const { firstName, lastName, phoneNumber, email, password } = req.body;
   console.log(req.body);
   try {
-    if (!firstName || !lastName || !phoneNumber || !email || !password) {
+    if (!phoneNumber || !password) {
       throw new ErrorModel(
         StatusCode.BAD_REQUEST,
         ErrorMessages.SIGNUP_DETAILS
       );
     }
-    const { rows: users } = await pool.query(checkPhoneAndEmail, [
-      email,
-      phoneNumber,
-    ]);
+    const { rows: users } = await pool.query(checkPhoneAndEmail, [phoneNumber]);
 
     if (users.length > 0) {
       throw new ErrorModel(StatusCode.CONFLICT, ErrorMessages.ALREADY_EXISTS);
@@ -36,11 +33,11 @@ const signup = async (req: Request, res: Response, next: NextFunction) => {
 
     const hashedPassword = bcrypt.hashSync(password + serverKey, saltRound);
 
-    const { rows: user } = await pool.query(insertUser, [
-      firstName,
-      lastName,
+    const { rows: user } = await pool.query<QueryReturnType>(insertUser, [
+      firstName ?? null,
+      lastName ?? null,
       phoneNumber,
-      email,
+      email ?? null,
       hashedPassword,
     ]);
 
@@ -51,14 +48,10 @@ const signup = async (req: Request, res: Response, next: NextFunction) => {
       );
     }
 
-    const { refreshToken, jwtToken } = await generateRefreshTokenJwtToken(
-      req.ip,
-      {
-        userId: user[0].userId,
-        firstName: user[0].firstname,
-        lastName: user[0].lastname,
-      }
-    );
+    const { refreshToken, jwtToken } = await generateRefreshTokenJwtToken({
+      userId: user[0].userId,
+      phoneNumber: user[0].phoneNumber,
+    });
 
     const { password: userpassword, ...userWithoutPassword } = user[0];
 

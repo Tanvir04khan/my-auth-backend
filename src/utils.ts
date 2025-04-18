@@ -54,8 +54,7 @@ export const getRefreshTokenDetails = () => {
 
 export const generateRefreshTokenJwtToken = async (userDetails: {
   userId: string;
-  firstName: string;
-  lastName: string;
+  phoneNumber: string;
 }) => {
   const { token, hashedRefreshToken, refreshTokenExpiry } =
     getRefreshTokenDetails();
@@ -69,8 +68,7 @@ export const generateRefreshTokenJwtToken = async (userDetails: {
   const jwtToken = sign(
     {
       userId: userDetails.userId,
-      firstName: userDetails.firstName,
-      lastName: userDetails.lastName,
+      phoneNumber: userDetails.phoneNumber,
     },
     serverKey,
     { expiresIn: jwtExpiry }
